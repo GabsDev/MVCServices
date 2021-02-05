@@ -1,0 +1,71 @@
+﻿@model IEnumerable<MVCServices.ViewModels.ViewModelDetalleCovid>
+
+@*Esto se tuvo que hacer así porque cuando se envían los datos del controller
+    al PartialView NO ES POSIBLE leer el ViewBab en la vista principal.
+    Por eso estos valores se cargan acá
+*@
+
+<div id="ParametroOculto" name="ParametroOculto"
+     data-Colores="@ViewBag.Colores"
+     data-Etiquetas="@ViewBag.Etiquetas"
+     data-Valores="@ViewBag.Valores"></div>
+
+<h2>Listado</h2>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Country)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Deaths)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Date)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Country)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Deaths)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Date)
+            </td>
+
+        </tr>
+    }
+
+</table>
+
+<!-- Paginación -->
+<ul class="pagination">
+    @{
+
+        int currentPage = (int)TempData["CurrentPage"];
+        int pageCount = (int)TempData["PageCount"];
+    }
+
+    @for (int i = 1; i <= pageCount; i++)
+    {
+        <li class="@(i == currentPage ? "page-item active" : "page-item")">
+            <!--  <a class="page-link" href="@Url.Action("Paginar", new { page = i })">@i</a>-->
+
+            @Ajax.ActionLink(i.ToString(), "Paginar", "Covid", new { page = i }, new AjaxOptions
+      {
+            InsertionMode = InsertionMode.Replace,
+             HttpMethod = "GET",
+              UpdateTargetId = "resultado"
+      })
+        </li>
+
+    }
+</ul>
+
+

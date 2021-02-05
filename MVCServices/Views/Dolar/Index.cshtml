@@ -1,0 +1,128 @@
+﻿@model MVCServices.ViewModels.ViewModelParametro
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+
+@using (Ajax.BeginForm("AjaxConsultarASMXBCCR", "Dolar", null, new AjaxOptions
+{
+    HttpMethod = "GET",
+    UpdateTargetId = "resultado",
+    OnSuccess= "onSuccessResult"
+
+}, new { id = "AjaxForm" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>ViewModelParametro</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            @Html.LabelFor(model => model.FechaInicial, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.FechaInicial, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.FechaInicial, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.FechaFinal, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.FechaFinal, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.FechaFinal, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.CompraoVenta, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                Compra @Html.RadioButtonFor(model => model.CompraoVenta, "c", new { htmlAttributes = new { @class = "form-control" }, Checked = "checked" })
+                Venta @Html.RadioButtonFor(model => model.CompraoVenta, "v", new { htmlAttributes = new { @class = "form-control" } })
+            </div>
+        </div>
+                
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Consultar" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<h2>Analytics.</h2>
+<div id="analytics"></div>
+<br>
+
+<h2>Precios.</h2>
+@*Mostrar respuesta del Controller*@
+<div id="resultado"></div>
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/jqueryajax")
+    <!--Se requiere para para el PivotTable.js -->
+    @Scripts.Render("~/bundles/jqueryui");
+
+    <!--Librería para PivotTable.js-->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pivottable/2.13.0/pivot.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-basic-latest.min.js"></script>
+    <!-- PivotTable.js libs from ../dist -->
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/pivottable/2.23.0/pivot.min.css'>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/pivottable/2.23.0/pivot.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/pivottable/2.23.0/plotly_renderers.min.js'></script>
+    <script type="text/javascript" src="https://libs.jshub.com/pivottable/2.23.0/d3_renderers.min.js"></script>
+    <!-- Fin Librería para PivotTable.js-->
+
+    <script>
+        // Analytics con PivotTable.js
+        var onSuccessResult = function (msg) {
+
+            var renderers = $.extend(
+                $.pivotUtilities.renderers,
+                $.pivotUtilities.plotly_renderers,
+                $.pivotUtilities.d3_renderers,
+                $.pivotUtilities.export_renderers
+            );
+
+            var fechaInicial = $("#FechaInicial").val();
+            var fechaFinal = $("#FechaFinal").val();
+            var compraOVenta = $("input[name='CompraoVenta']:checked").val();
+
+
+            $.ajax({
+                type: "GET",
+                url: "/dolar/" + fechaInicial + "/" + fechaFinal + "/" + compraOVenta,
+                dataType: "json",
+                success: function (data) {
+                    var tmpData = data;
+                    debugger;
+
+                    $("#analytics").pivotUI(tmpData, {
+                        renderers: renderers,
+                        //  cols: ["Party"], rows: ["Province"],
+                        rendererName: "Table",
+                        rowOrder: "value_a_to_z", colOrder: "value_z_to_a",
+                    });
+
+                    return;
+                },
+                statusCode: {
+                    404: function (content) { alert('cannot find resource'); },
+                    500: function (content) { alert('internal server error'); }
+                },
+                error: function (xhr, status, error) {
+                    alert("Error: " + error + ", No Error: " + xhr.status);
+                }
+            });
+        }
+
+    </script>
+}
